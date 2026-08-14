@@ -7,21 +7,17 @@ import uuid
 
 app = Flask(__name__)
 
-# 구글 시트를 매번 신선하게 불러오는 안정적인 함수
 def get_sheet():
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
     google_creds = os.environ.get('GOOGLE_CREDENTIALS')
     
     if google_creds:
-        # Render 환경
         creds_dict = json.loads(google_creds)
         creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
     else:
-        # 로컬 테스트 환경
         creds = Credentials.from_service_account_file('secret.json', scopes=scope)
         
     client = gspread.authorize(creds)
-    # 🚨 중요: 구글 스프레드시트 이름이 '근태달력DB'와 띄어쓰기까지 정확히 일치해야 합니다!
     return client.open('근태달력DB').sheet1
 
 @app.route('/')
@@ -71,7 +67,8 @@ def get_events():
 def add_event():
     try:
         data = request.json
-        new_id = str(uuid.uuid4())[:8]
+        # 🔥 화면에서 즉시 생성한 고유 ID를 그대로 구글 시트에 저장합니다!
+        new_id = str(data.get('id')) 
         
         row_data = [
             new_id,
@@ -87,7 +84,7 @@ def add_event():
         sheet.append_row(row_data)
         return jsonify({'status': 'success'})
     except Exception as e:
-        print(f"등록 에러: {e}") # Render 로그에 상세 에러를 찍어줍니다
+        print(f"등록 에러: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/delete', methods=['POST'])
