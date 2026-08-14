@@ -3,116 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <title>팀 근태 현황 달력</title>
-    <!-- FullCalendar 및 캡처 라이브러리 -->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales/ko.global.min.js'></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
-        body { 
-            font-family: 'Pretendard', sans-serif; 
-            background-color: #f0f2f5; 
-            margin: 0; 
-            padding: 15px; 
-            display: flex; 
-            flex-direction: column; /* 전체를 상단-하단으로 나눔 */
-            gap: 15px; 
-            height: 100vh; 
-            box-sizing: border-box; 
-        }
-
-        /* 👑 상단 메뉴 (근태 선택, 상세내용, 복사 버튼) */
-        .top-nav {
-            background: white;
-            padding: 12px 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .nav-left, .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
+        body { font-family: 'Pretendard', sans-serif; background-color: #f0f2f5; margin: 0; padding: 15px; display: flex; flex-direction: column; gap: 15px; height: 100vh; box-sizing: border-box; overflow: hidden; }
+        .top-nav { background: white; padding: 12px 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .nav-left, .nav-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .section-title { font-size: 15px; color: #333; font-weight: 700; margin-right: 5px; }
-
         .button-group { display: flex; gap: 6px; }
-        .btn { padding: 8px 14px; border: 1px solid #ddd; border-radius: 6px; background: white; font-size: 14px; cursor: pointer; color: #555; transition: all 0.2s;}
-        
+        .btn { padding: 8px 14px; border: 1px solid #ddd; border-radius: 6px; background: white; font-size: 14px; cursor: pointer; color: #555; transition: all 0.2s; }
         .btn-status { display: flex; align-items: center; gap: 6px; }
         .color-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
         .btn-status.active { border-color: #333; box-shadow: 0 0 0 1px #333; font-weight: bold; color: #222; }
-
-        /* 입력창 디자인 */
         input[type="text"] { padding: 9px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-weight: 600; width: 180px; }
-        
         #custom-area { display: none; align-items: center; gap: 8px; background: #f8f9fa; padding: 4px 10px; border-radius: 6px; border: 1px dashed #ccc; }
-
-        /* 복사하기 버튼 */
-        #capture-btn { background: #4DABF7; color: white; font-weight: bold; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.3s ease;}
+        #capture-btn { background: #4DABF7; color: white; font-weight: bold; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.3s ease; }
         #capture-btn:hover { filter: brightness(0.9); }
-        .instruction { color: #666; font-size: 13px; font-weight: 500;}
-
-        /* 📌 하단 영역 (좌측 얇은 사이드바 + 달력 본문) */
-        .main-body {
-            display: flex;
-            flex: 1;
-            gap: 15px;
-            overflow: hidden; /* 높이 초과 방지 */
-        }
-
-        /* 👈 좌측 인원 선택 사이드바 (얇고 세로로 배치) */
-        .sidebar { 
-            width: 130px; /* 얇게 설정 */
-            min-width: 130px; 
-            background: white; 
-            padding: 15px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
-            overflow-y: auto; 
-            display: flex; 
-            flex-direction: column; 
-        }
-        
-        /* 인원 버튼 세로 정렬 */
+        .instruction { color: #666; font-size: 13px; font-weight: 500; }
+        .main-body { display: flex; flex: 1; gap: 15px; overflow: hidden; }
+        .sidebar { width: 130px; min-width: 130px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-y: auto; display: flex; flex-direction: column; }
         .name-group-vertical { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
         .btn-name { width: 100%; text-align: center; padding: 10px 0; }
         .btn-name.active { border-color: #333; background: #333; color: white; font-weight: bold; }
-
-        /* 📅 달력 영역 (남은 공간 꽉 채우기) */
-        .calendar-wrapper { 
-            flex: 1; 
-            background: white; 
-            padding: 20px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            background-color: white; /* 캡처 시 배경 보장 */
-        }
-        
+        .calendar-wrapper { flex: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; background-color: white; }
         #calendar { flex: 1; min-height: 0; }
-
-        /* 달력 세부 CSS */
         .fc-daygrid-day-events { display: flex !important; flex-wrap: wrap !important; padding: 2px !important; }
         .fc-daygrid-event-harness { position: static !important; width: 48% !important; margin: 1% !important; }
-        .fc-event { width: 100% !important; border-radius: 4px !important; border: none !important; transition: opacity 0.2s; }
-        .custom-event-text { font-size: clamp(10px, 0.9vw, 13px) !important; font-weight: 600 !important; text-align: center; padding: 4px 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .fc-event { width: 100% !important; border-radius: 4px !important; border: none !important; transition: opacity 0.2s; cursor: pointer; }
+        .custom-event-text { font-size: clamp(10px, 0.9vw, 13px) !important; font-weight: 600 !important; text-align: center; padding: 4px 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: white; }
         .fc-event:hover { opacity: 0.8; }
         .fc-col-header-cell-cushion { font-size: 14px; font-weight: 700; padding: 8px 0 !important; }
         .fc-daygrid-day-number { font-size: 14px; font-weight: 600; }
     </style>
 </head>
 <body>
-
-    <!-- 👑 상단 내비게이션 바 -->
     <div class="top-nav">
         <div class="nav-left">
             <span class="section-title">근태 선택</span>
@@ -124,25 +49,19 @@
                 <button class="btn btn-status" data-status="휴무" data-color="#868e96"><span class="color-dot" style="background:#868e96;"></span>휴무</button>
                 <button class="btn btn-status" data-type="custom" data-color="#845EF7"><span class="color-dot" style="background: linear-gradient(135deg, #845EF7, #FF6B6B);"></span>직접선택</button>
             </div>
-            
             <div id="custom-area">
                 <span style="font-size: 13px; font-weight: 600; color: #555;">🎨 막대기 색상:</span>
                 <input type="color" id="custom-color" value="#845EF7" style="cursor: pointer; border: none; width: 30px; height: 26px; border-radius: 4px;">
             </div>
-            
             <input type="text" id="detail-input" placeholder="상세내용 (예: 제주도, 재택)">
         </div>
-        
         <div class="nav-right">
             <span class="instruction">💡 달력 드래그(등록) / 막대기 클릭(삭제)</span>
             <button id="capture-btn">📸 달력 복사하기 (메일용)</button>
         </div>
     </div>
 
-    <!-- 📌 하단 메인 영역 -->
     <div class="main-body">
-        
-        <!-- 👈 좌측 얇은 사이드바 -->
         <div class="sidebar">
             <div class="section-title" style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px;">인원 선택</div>
             <div class="name-group-vertical" id="name-group">
@@ -162,12 +81,9 @@
                 <button class="btn btn-name" data-name="라나">라나</button>
             </div>
         </div>
-
-        <!-- 📅 달력 본문 (가로 폭이 대폭 늘어남) -->
         <div class="calendar-wrapper" id="calendar-wrapper">
             <div id='calendar'></div>
         </div>
-        
     </div>
 
     <script>
@@ -184,7 +100,6 @@
             '2026-10-05': '대체공휴일', '2026-10-09': '한글날', '2026-12-25': '기독탄신일'
         };
 
-        // 이름 버튼 선택 이벤트
         document.querySelectorAll('.btn-name').forEach(button => {
             button.addEventListener('click', function() {
                 document.querySelectorAll('.btn-name').forEach(btn => btn.classList.remove('active'));
@@ -193,7 +108,6 @@
             });
         });
 
-        // 상태 버튼 선택 이벤트
         document.querySelectorAll('.btn-status').forEach(button => {
             button.addEventListener('click', function() {
                 document.querySelectorAll('.btn-status').forEach(btn => btn.classList.remove('active'));
@@ -210,14 +124,12 @@
             });
         });
 
-        // 달력 복사하기 버튼 애니메이션 및 캡처 로직
         document.getElementById('capture-btn').addEventListener('click', function() {
             const btn = this;
             btn.innerText = "⏳ 복사하는 중...";
             btn.style.backgroundColor = "#868e96";
             btn.style.pointerEvents = "none";
             
-            // calendar-wrapper 만 캡처하므로 왼쪽 메뉴나 상단 메뉴는 깔끔하게 제외됩니다!
             html2canvas(document.getElementById('calendar-wrapper'), { scale: 2, backgroundColor: "#ffffff" }).then(canvas => {
                 let targetWidth = canvas.width / 2;
                 let targetHeight = canvas.height / 2;
@@ -275,19 +187,7 @@
                     .then(response => response.json())
                     .then(data => {
                         let explodedEvents = [];
-                        const defaultStatuses = ['연차', '출장', '교육', '세미나', '휴무'];
-                        
                         data.forEach(ev => {
-                            let props = ev.extendedProps;
-                            let finalTitle = props.name;
-                            
-                            if (props.status !== '직접선택' && !defaultStatuses.includes(props.status)) {
-                                finalTitle += `-${props.status}`;
-                            }
-                            if (props.detail) {
-                                finalTitle += `-${props.detail}`;
-                            }
-
                             let curr = new Date(ev.start + 'T00:00:00');
                             let endDate = new Date(ev.end + 'T00:00:00');
                             while(curr < endDate) {
@@ -296,11 +196,11 @@
                                 let dd = String(curr.getDate()).padStart(2, '0');
                                 explodedEvents.push({
                                     id: ev.id,
-                                    title: finalTitle, 
+                                    title: ev.title, 
                                     start: `${yyyy}-${mm}-${dd}`,
                                     backgroundColor: ev.backgroundColor,
                                     borderColor: ev.borderColor,
-                                    extendedProps: props
+                                    extendedProps: ev.extendedProps
                                 });
                                 curr.setDate(curr.getDate() + 1);
                             }
@@ -348,6 +248,7 @@
                     let detailMsg = props.detail ? `(${props.detail}) ` : "";
                     let statusName = props.status === '직접선택' ? '' : `${props.status} `;
                     if (confirm(`[${props.name}]님의 ${statusName}${detailMsg}일정을 삭제하시겠습니까?`)) {
+                        // 원래의 쾌적한 Fetch 요청 복구!
                         fetch('/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: info.event.id }) })
                         .then(response => response.json())
                         .then(data => { if (data.status === 'success') calendar.refetchEvents(); });
@@ -373,7 +274,8 @@
                     let detailShow = finalDetail ? (statusShow ? `-${finalDetail}` : `-${finalDetail}`) : "";
                     let confirmShow = finalStatus === '직접선택' ? finalDetail : `${statusShow}${detailShow}`;
                     
-                    if(confirm(`${currentName}님의 '${confirmShow}' 일정을 등록하시겠습니까?\n(${info.startStr} ~ ${info.endStr} 전날까지)`)) {
+                    if(confirm(`${currentName}님의 '${confirmShow}' 일정을 등록하시겠습니까?\\n(${info.startStr} ~ ${info.endStr} 전날까지)`)) {
+                        // 원래의 쾌적한 Fetch 요청 복구!
                         fetch('/add', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
